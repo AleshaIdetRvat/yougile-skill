@@ -17,32 +17,88 @@
 
 ## Установка
 
-Через [`npx skills`](https://github.com/vercel-labs/skills) — ставит скилл в любой
-поддерживаемый агент (Claude Code, Codex, Cursor, OpenCode, Copilot и ещё 70+):
+### Проще всего — попросить ИИ-агента
+
+Скиньте своему агенту (Claude Code, Codex, Cursor — любому) вот эту строчку:
+
+> Установи мне скилл https://github.com/AleshaIdetRvat/yougile-skill — открой README
+> и следуй разделу «Инструкция для ИИ-агента».
+
+Дальше он разберётся сам: определит, куда класть, поставит и проверит. Ничего знать заранее не
+нужно.
+
+### Инструкция для ИИ-агента
+
+*Ты читаешь это, потому что пользователь попросил установить скилл по ссылке. Выполни шаги ниже и
+отчитайся. Скилл — это папка `yougile/` из этого репозитория.*
+
+**Шаг 1. Определи целевую папку** — по тому, в каком агенте ты работаешь:
+
+| Агент | Глобально (все проекты) | Только текущий проект |
+|---|---|---|
+| Claude Code | `~/.claude/skills/` | `./.claude/skills/` |
+| Codex | `~/.codex/skills/` | `./.agents/skills/` |
+| Cursor | `~/.cursor/skills/` | `./.agents/skills/` |
+| OpenCode | `~/.config/opencode/skills/` | `./.agents/skills/` |
+| другой | `~/.agents/skills/` | `./.agents/skills/` |
+
+Если пользователь не сказал иначе — ставь глобально.
+
+**Шаг 2. Основной путь — установщик `npx skills`.** Проверь, есть ли `npx` (`command -v npx`).
+Если есть:
 
 ```bash
-# глобально — доступен во всех проектах
-npx skills add AleshaIdetRvat/yougile-skill -g
-
-# или только в текущий проект
-npx skills add AleshaIdetRvat/yougile-skill
-
-# конкретному агенту
-npx skills add AleshaIdetRvat/yougile-skill -g -a codex
+npx -y skills add AleshaIdetRvat/yougile-skill -g -y
 ```
 
-Обновить позже — `npx skills update`, удалить — `npx skills remove yougile`,
-посмотреть установленное — `npx skills list`.
+Он сам определит агента и разложит файлы. Флаг `-g` убери, если ставишь только в текущий проект.
+Можно указать агента явно: `-a claude-code`, `-a codex`, `-a cursor`.
 
-Куда именно кладётся глобально: Claude Code → `~/.claude/skills/`, Codex → `~/.codex/skills/`,
-Cursor → `~/.cursor/skills/`.
-
-Либо вручную — склонировать репозиторий и скопировать папку скилла `yougile/`:
+**Шаг 3. Если `npx`/`node` нет — поставь вручную** (нужен только `git`). Подставь путь из шага 1:
 
 ```bash
-git clone https://github.com/AleshaIdetRvat/yougile-skill /tmp/ys
-cp -r /tmp/ys/yougile ~/.claude/skills/yougile     # или ~/.codex/skills/yougile
+DEST="$HOME/.claude/skills"        # ← путь из таблицы в шаге 1
+git clone --depth 1 https://github.com/AleshaIdetRvat/yougile-skill /tmp/yougile-skill
+mkdir -p "$DEST"
+rm -rf "$DEST/yougile"
+cp -r /tmp/yougile-skill/yougile "$DEST/yougile"
+rm -rf /tmp/yougile-skill
 ```
+
+Копируй именно подпапку `yougile/`, а не весь репозиторий: в целевой папке должно получиться
+`yougile/SKILL.md`, `yougile/scripts/`, `yougile/references/`.
+
+**Шаг 4. Проверь, что всё встало:**
+
+```bash
+python3 "$DEST/yougile/scripts/yougile.py" status
+```
+
+Успех — если в ответ пришёл **любой JSON** с полем `hasKey`: значит файлы на месте и `python3`
+рабочий. На чистой машине там будет `"hasKey": false` и подсказка про онбординг — это нормально,
+ключа ещё нет. Если же вылетела ошибка Python или файл не найден — установка не удалась. Если нет
+самого `python3`, скажи пользователю, что нужен Python 3.8+; других зависимостей у скилла нет.
+
+**Шаг 5. Отчитайся пользователю** — коротко:
+
+- скилл установлен, назови папку;
+- сессию агента надо перезапустить, иначе скилл не подхватится;
+- при первом обращении к YouGile скилл попросит доступ (логин с паролем или готовый API-ключ),
+  права администратора для этого не нужны.
+
+**Чего делать не надо:** не запускай `login`/`setup` и не спрашивай пароль от YouGile на этапе
+установки — скилл сам проведёт по онбордингу, когда пользователь поставит первую реальную задачу.
+
+### Обновление и удаление
+
+```bash
+npx skills update            # обновить до свежей версии из репозитория
+npx skills remove yougile    # удалить
+npx skills list              # посмотреть, что установлено
+```
+
+Если ставили вручную — обновление это тот же `git clone` + `cp -r` из шага 3, он перезаписывает
+папку.
 
 ## Первый запуск: доступ
 
