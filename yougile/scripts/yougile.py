@@ -494,6 +494,10 @@ def cmd_tasks(args):
         out(api(args, "GET", "/chats/%s/messages" % args.id, query={"limit": args.limit or 50}))
     elif args.action == "comment":
         body = {"text": args.text}
+        # `text` is shown verbatim - markup there lands on screen as raw tags. Formatting
+        # renders only from `textHtml`, so `--html` sends it and `text` stays the plain fallback.
+        if args.html:
+            body["textHtml"] = args.html
         body.update(parse_json_arg(args.json, "--json") or {})
         out(api(args, "POST", "/chats/%s/messages" % args.id, body=body))
 
@@ -620,7 +624,8 @@ def build_parser():
     s.add_argument("--archived", type=lambda v: v.lower() == "true")
     s.add_argument("--deleted", type=lambda v: v.lower() == "true")
     s.add_argument("--include-deleted", action="store_true")
-    s.add_argument("--text", help="Comment text for `comment`")
+    s.add_argument("--text", help="Comment text for `comment`: PLAIN text, shown verbatim (no HTML here)")
+    s.add_argument("--html", help="Formatted body for `comment` (textHtml); keep --text as its plain version")
     s.add_argument("--json")
     add_common(s)
     add_conn(s)

@@ -44,7 +44,8 @@ python3 scripts/yougile.py tasks update --id <taskId> --title "Новое наз
 python3 scripts/yougile.py tasks move --id <taskId> --column-id <otherColumnId>
 python3 scripts/yougile.py tasks complete --id <taskId>
 python3 scripts/yougile.py tasks comments --id <taskId>
-python3 scripts/yougile.py tasks comment --id <taskId> --text "Готово, проверьте"
+python3 scripts/yougile.py tasks comment --id <taskId> --text "Готово, проверьте"   # plain, shown verbatim
+python3 scripts/yougile.py tasks comment --id <taskId> --text "Готово" --html "<b>Готово</b>"  # formatted
 
 # people
 python3 scripts/yougile.py users list --all

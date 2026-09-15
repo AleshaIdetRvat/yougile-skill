@@ -43,8 +43,18 @@ Prefer a comment - it is additive, timestamped and cannot destroy anything:
 python3 scripts/yougile.py tasks comment --id SAI-515 --text "Проверил, воспроизводится на проде"
 ```
 
-- `textHtml` renders formatting in the app (`<b>`, `<a href>`); `text` is the plain fallback shown
-  in notifications. Send both. The API read-back returns only `text`, so do not "verify" formatting
+```bash
+python3 scripts/yougile.py tasks comment --id SAI-515 \
+    --text "Готово. Проверьте на стенде" --html "<p><b>Готово.</b> Проверьте на стенде</p>"
+```
+
+- **Never put HTML into `text` / `--text`** - the app shows it verbatim, raw `<p><b>` tags on
+  screen. Formatting renders only from `textHtml` (`--html`); `text` is the plain fallback shown
+  in notifications, so keep it a readable plain version with line breaks. Send both.
+- **A sent message cannot be edited.** `PUT /chats/{taskId}/messages/{id}` rejects `text` and
+  `textHtml` (`property text should not exist`). Fix a broken one by posting a corrected copy and
+  sending `{"deleted": true}` to the old one.
+- The API read-back returns only `text`, so do not "verify" formatting
   by re-reading the message - it will look like it was dropped when it was not.
 - `label` pins a short tag on the message ("важно") and shows up next to it in the app.
 
@@ -102,6 +112,11 @@ python3 scripts/yougile.py tasks create --title "Починить логин" --
 `columnId` is **optional** on `POST /tasks`, despite what the endpoint table implies. That is the
 difference between the two kinds of child task:
 
+> **`tasks create` cannot make one.** The wrapper always sends `columnId`, and omitting the flag
+> sends it as `null`, which YouGile rejects with `400 Недопустимое значение columnId: null`. Use
+> the raw escape hatch instead — `request POST /tasks --data '{"title": "...", "description":
+> "..."}'` — and the task is created with no column at all. Verified 11.09.2026.
+
 - **Real subtask** - create it *without* `columnId`, then add its id to the parent's `subtasks`.
   It lives inside the parent and never appears as a card on the board.
 - **Linked task** - a task that already sits in a column and is also listed in `subtasks`. It stays
@@ -110,6 +125,11 @@ difference between the two kinds of child task:
 There is no `parentId` field, and `columnId` cannot be set to `null` later - decide at creation.
 A task created with no `columnId` and never linked to a parent is invisible in the UI: link it
 straight away.
+
+A real subtask is a **full task**, not a checklist row: it carries its own `description` (newlines
+included) and its own comments via `tasks comment`, and once linked it is issued a project code
+(`ID-3307` while orphaned, `BOT-477` after linking). Closing one is `completed: true` - it has no
+column to move it to. Order cannot be set over the API, so put the sequence in the titles.
 
 ## Build a board
 

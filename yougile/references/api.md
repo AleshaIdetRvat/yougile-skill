@@ -162,6 +162,7 @@ A task's discussion is a chat whose id equals the task id.
 | GET | `/chats/{taskId}/messages` | query: `limit`, `offset`, `includeSystem` |
 | POST | `/chats/{taskId}/messages` | `{"text":"...", "textHtml"?: "...", "label"?: "..."}` |
 | GET | `/chats/{taskId}/messages/{messageId}` | |
+| PUT | `/chats/{taskId}/messages/{messageId}` | `{"deleted": true}`, `label`; **`text`/`textHtml` are rejected** - a sent message cannot be edited |
 
 ## 8. Users and departments
 
@@ -192,7 +193,7 @@ edit them. A sticker is only visible on a board if that board enables it:
 `PUT /boards/{id}` with `{"stickers":{"custom":{"<stickerId>":true}}}`.
 
 Chat messages accept `textHtml` alongside `text`: the app renders the HTML, while `text` is the
-plain fallback. Reading a message back returns only `text`, so formatting looks dropped when it is
+plain fallback and is shown **verbatim** - HTML put into `text` appears as raw tags. Reading a message back returns only `text`, so formatting looks dropped when it is
 not. `label` pins a short tag on the message.
 | GET/POST | `/webhooks` | `{"url":"https://...","event":"task-*"}` - subscribe to events |
 | PUT | `/webhooks/{id}` | enable/disable, change url |
