@@ -160,7 +160,7 @@ A task's discussion is a chat whose id equals the task id.
 | Method | Path | Notes |
 | --- | --- | --- |
 | GET | `/chats/{taskId}/messages` | query: `limit`, `offset`, `includeSystem` |
-| POST | `/chats/{taskId}/messages` | `{"text":"...", "textHtml"?: "...", "label"?: "..."}` |
+| POST | `/chats/{taskId}/messages` | `{"text":"...", "textHtml"?: "...", "label"?: "..."}`; no way to @-mention - `properties`/`mentions` are rejected, `@Name` stays plain text |
 | GET | `/chats/{taskId}/messages/{messageId}` | |
 | PUT | `/chats/{taskId}/messages/{messageId}` | `{"deleted": true}`, `label`; **`text`/`textHtml` are rejected** - a sent message cannot be edited |
 

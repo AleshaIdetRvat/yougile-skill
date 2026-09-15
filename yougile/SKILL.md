@@ -82,6 +82,9 @@ Create/update bodies also accept `--json '{...}'` for fields the flags do not ex
 - **Nothing is truly deleted** - `--deleted true` is the delete, `--archived true` archives. Prefer
   archiving unless the user asked for deletion, and confirm destructive or mass changes first.
 - **Write actions echo `{"id": ...}` only.** Report what changed in words, not raw JSON.
+- **The API cannot @-mention anyone.** `@Name` in a comment stays plain text - no highlight, no
+  notification. If the user asks to tag someone, post the comment and tell them to add the tag in
+  the app. See `references/recipes.md`.
 
 ## Where to look next
 

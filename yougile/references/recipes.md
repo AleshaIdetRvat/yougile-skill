@@ -57,6 +57,14 @@ python3 scripts/yougile.py tasks comment --id SAI-515 \
 - The API read-back returns only `text`, so do not "verify" formatting
   by re-reading the message - it will look like it was dropped when it was not.
 - `label` pins a short tag on the message ("важно") and shows up next to it in the app.
+- **Mentions cannot be created through the API.** A real mention made in the app is stored as a
+  chunk next to the text:
+  `"properties": {"params": {"chunks": [{"type": "user", "replacement": "@Федор", "data": {"userId": "<id>"}}]}}`.
+  `POST` rejects `properties` and `mentions` (`property ... should not exist`); `@Name` in `text`
+  and mention-like markup in `textHtml` are saved with `chunks: []` - plain text, nobody is
+  notified. When the user wants someone tagged, post the message without pretending the tag works
+  and ask the user to add a one-line mention from the app. To check whether a message really
+  tags someone, read it back and look for a `type: "user"` chunk.
 
 Editing `description` **overwrites** it. To append, read first:
 

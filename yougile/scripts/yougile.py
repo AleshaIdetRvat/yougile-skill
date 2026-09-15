@@ -499,7 +499,15 @@ def cmd_tasks(args):
         if args.html:
             body["textHtml"] = args.html
         body.update(parse_json_arg(args.json, "--json") or {})
-        out(api(args, "POST", "/chats/%s/messages" % args.id, body=body))
+        result = api(args, "POST", "/chats/%s/messages" % args.id, body=body)
+        # A real mention is a chunk in properties.params, which POST rejects; "@Name" in the
+        # text is saved as plain text and notifies nobody.
+        if "@" in (args.text or ""):
+            sys.stderr.write(
+                "Note: '@Name' was sent as plain text - the API cannot create a mention, nobody is "
+                "notified. Ask the user to add the tag in the app.\n"
+            )
+        out(result)
 
 
 def cmd_users(args):
@@ -624,7 +632,11 @@ def build_parser():
     s.add_argument("--archived", type=lambda v: v.lower() == "true")
     s.add_argument("--deleted", type=lambda v: v.lower() == "true")
     s.add_argument("--include-deleted", action="store_true")
-    s.add_argument("--text", help="Comment text for `comment`: PLAIN text, shown verbatim (no HTML here)")
+    s.add_argument(
+        "--text",
+        help="Comment text for `comment`: PLAIN text, shown verbatim (no HTML here); "
+        "'@Name' is not a mention - the API cannot tag users",
+    )
     s.add_argument("--html", help="Formatted body for `comment` (textHtml); keep --text as its plain version")
     s.add_argument("--json")
     add_common(s)
