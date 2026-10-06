@@ -62,7 +62,11 @@ python3 scripts/yougile.py tasks comment --id SAI-515 \
   sending `{"deleted": true}` to the old one.
 - The API read-back returns only `text`, so do not "verify" formatting
   by re-reading the message - it will look like it was dropped when it was not.
-- `label` pins a short tag on the message ("важно") and shows up next to it in the app.
+- `label` puts a short tag on the message **and pins it**: every labelled message is collected in
+  the pinned bar at the top of the chat. Use it only for what should really be pinned; to sign
+  routine messages (e.g. a bot writing from a person's key) put the signature in the text.
+- **Formatting and attachments do not mix:** with `textHtml` the app shows only it, and the
+  `/root/#file:` attachments in `text` disappear.
 - **Mentions cannot be created through the API.** A real mention made in the app is stored as a
   chunk next to the text:
   `"properties": {"params": {"chunks": [{"type": "user", "replacement": "@Федор", "data": {"userId": "<id>"}}]}}`.
