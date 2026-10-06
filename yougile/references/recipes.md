@@ -51,6 +51,12 @@ python3 scripts/yougile.py tasks comment --id SAI-515 \
 - **Never put HTML into `text` / `--text`** - the app shows it verbatim, raw `<p><b>` tags on
   screen. Formatting renders only from `textHtml` (`--html`); `text` is the plain fallback shown
   in notifications, so keep it a readable plain version with line breaks. Send both.
+- **Images go as attachments: `--image file.png`** (repeatable). The script uploads each file
+  (`POST /upload-file`) and adds a line `/root/#file:<relative url>` to `text`, separated by
+  `"\n \n"` - exactly what the app sends when a person attaches a picture. Only such an image can
+  be clicked and enlarged; `<img src>` in `textHtml` is displayed but not clickable. With images
+  `--html` is dropped - formatting next to an attachment is untested. Uploaded files open only
+  for signed-in users.
 - **A sent message cannot be edited.** `PUT /chats/{taskId}/messages/{id}` rejects `text` and
   `textHtml` (`property text should not exist`). Fix a broken one by posting a corrected copy and
   sending `{"deleted": true}` to the old one.

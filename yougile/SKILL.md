@@ -46,6 +46,7 @@ python3 scripts/yougile.py tasks complete --id <taskId>
 python3 scripts/yougile.py tasks comments --id <taskId>
 python3 scripts/yougile.py tasks comment --id <taskId> --text "Готово, проверьте"   # plain, shown verbatim
 python3 scripts/yougile.py tasks comment --id <taskId> --text "Готово" --html "<b>Готово</b>"  # formatted
+python3 scripts/yougile.py tasks comment --id <taskId> --text "Было/стало" --image before.png --image after.png  # attachments
 
 # people
 python3 scripts/yougile.py users list --all

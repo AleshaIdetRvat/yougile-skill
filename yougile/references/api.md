@@ -162,6 +162,7 @@ A task's discussion is a chat whose id equals the task id.
 | GET | `/chats/{taskId}/messages` | query: `limit`, `offset`, `includeSystem` |
 | POST | `/chats/{taskId}/messages` | `{"text":"...", "textHtml"?: "...", "label"?: "..."}`; no way to @-mention - `properties`/`mentions` are rejected, `@Name` stays plain text |
 | GET | `/chats/{taskId}/messages/{messageId}` | |
+| POST | `/upload-file` | multipart, field `file`; returns `{"url": "/user-data/<id>/<name>"}`. Attach to a message as a line `/root/#file:<url>` in `text` |
 | PUT | `/chats/{taskId}/messages/{messageId}` | `{"deleted": true}`, `label`; **`text`/`textHtml` are rejected** - a sent message cannot be edited |
 
 ## 8. Users and departments

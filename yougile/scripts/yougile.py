@@ -86,7 +86,7 @@ class ApiError(Exception):
         super().__init__("HTTP %s on %s: %s" % (status, url, body))
 
 
-def call(method, path, base_url, key=None, query=None, body=None, timeout=60, retries=3):
+def call(method, path, base_url, key=None, query=None, body=None, timeout=60, retries=3, raw=None):
     """Perform one API call. `path` is relative to base_url, e.g. '/tasks'."""
     url = base_url.rstrip("/") + "/" + path.lstrip("/")
     if query:
@@ -99,6 +99,8 @@ def call(method, path, base_url, key=None, query=None, body=None, timeout=60, re
     if body is not None:
         data = json.dumps(body, ensure_ascii=False).encode("utf-8")
         headers["Content-Type"] = "application/json"
+    if raw is not None:  # (bytes, content type) - e.g. a multipart upload
+        data, headers["Content-Type"] = raw
     if key:
         headers["Authorization"] = "Bearer " + key
 
@@ -129,7 +131,7 @@ def call(method, path, base_url, key=None, query=None, body=None, timeout=60, re
     raise last_error
 
 
-def api(args, method, path, query=None, body=None):
+def api(args, method, path, query=None, body=None, raw=None):
     key = resolve_key(args)
     if not key:
         die(
@@ -137,7 +139,25 @@ def api(args, method, path, query=None, body=None):
             "`python3 yougile.py setup --key <KEY>` or set YOUGILE_API_KEY.",
             code=3,
         )
-    return call(method, path, resolve_base_url(args), key=key, query=query, body=body)
+    return call(method, path, resolve_base_url(args), key=key, query=query, body=body, raw=raw)
+
+
+def upload_file(args, path):
+    """Upload a file to YouGile; returns its relative url (`/user-data/<id>/<name>`)."""
+    if not os.path.isfile(path):
+        die("No such file: %s" % path)
+    name = os.path.basename(path)
+    boundary = "----yougile%d" % int(time.time() * 1000)
+    with open(path, "rb") as f:
+        content = f.read()
+    data = (
+        ("--%s\r\nContent-Disposition: form-data; name=\"file\"; filename=\"%s\"\r\n"
+         "Content-Type: application/octet-stream\r\n\r\n" % (boundary, name)).encode("utf-8")
+        + content
+        + ("\r\n--%s--\r\n" % boundary).encode("utf-8")
+    )
+    url = api(args, "POST", "/upload-file", raw=(data, "multipart/form-data; boundary=" + boundary))["url"]
+    return "/" + url.split("://", 1)[1].split("/", 1)[1] if "://" in url else url
 
 
 MAX_LIMIT = 1000  # server caps a page at 1000 rows
@@ -494,6 +514,16 @@ def cmd_tasks(args):
         out(api(args, "GET", "/chats/%s/messages" % args.id, query={"limit": args.limit or 50}))
     elif args.action == "comment":
         body = {"text": args.text}
+        if args.image:
+            # An image the user can click to enlarge is an attachment: a `/root/#file:<url>` line
+            # in `text`, like the app sends. <img> in textHtml shows but cannot be enlarged.
+            urls = [upload_file(args, path) for path in args.image]
+            body["text"] = "\n \n".join([t for t in [args.text] if t] + ["/root/#file:" + u for u in urls])
+            if args.html:
+                sys.stderr.write("Note: --html is ignored with --image - an attachment goes in plain text.\n")
+                args.html = None
+        elif not args.text:
+            die("Nothing to send: pass --text and/or --image")
         # `text` is shown verbatim - markup there lands on screen as raw tags. Formatting
         # renders only from `textHtml`, so `--html` sends it and `text` stays the plain fallback.
         if args.html:
@@ -638,6 +668,10 @@ def build_parser():
         "'@Name' is not a mention - the API cannot tag users",
     )
     s.add_argument("--html", help="Formatted body for `comment` (textHtml); keep --text as its plain version")
+    s.add_argument(
+        "--image", action="append", metavar="FILE",
+        help="Attach an image to `comment` (repeatable); it can be clicked to enlarge in the app",
+    )
     s.add_argument("--json")
     add_common(s)
     add_conn(s)
