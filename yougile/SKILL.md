@@ -50,6 +50,22 @@ prints `Posted as <name>` to stderr. `login`/`setup` refuse to overwrite a worki
 person in a profile - save it under its own `--account`. Never print a key: `status` shows a
 preview, `whoami`/`accounts` show only owners.
 
+## Calling the script
+
+`scripts/yougile.py` below is relative to this skill's directory. Call it by its absolute path
+rather than `cd` into the skill: the agent's shell may reset the working directory between calls.
+For several calls in one command, wrap it in a **function**, not a string variable:
+
+```bash
+yg() { python3 /abs/path/to/yougile/scripts/yougile.py --account <name> "$@"; }
+yg whoami; yg tasks get --id SAI-515
+```
+
+`Y="python3 .../yougile.py"; $Y whoami` breaks: zsh (the default shell on macOS and on many
+Linux setups) does not split an unquoted variable into words, so it looks for a program literally
+named `python3 .../yougile.py` ("no such file or directory"). A function works the same in zsh
+and bash. To fix the profile for a whole session, `export YOUGILE_ACCOUNT=<name>` also works.
+
 ## Core commands
 
 All commands accept `--account`, `--key` and `--base-url`; self-hosted installs need
