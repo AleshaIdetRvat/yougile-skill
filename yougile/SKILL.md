@@ -19,13 +19,40 @@ python3 scripts/yougile.py status
 - `"hasKey": false`, or `"ok": false` with 401/403 → read `references/auth.md` and run the flow
   there. Never guess a key and never keep retrying a rejected one.
 
-Short version if the user is ready to hand over credentials: login and password go through
-`login --password-stdin` (the script gets the key itself, admin rights are **not** required); an
-already-issued key goes through `setup --key`. The key lands in `~/.yougile/credentials.json`.
+Short version (details in `references/auth.md`):
+
+- **Default, any OS** - `login --web [--account <name>]`: a one-time page on 127.0.0.1 opens in
+  the user's browser, they type email and password (and pick a company), the script gets and saves
+  the key itself. **Run it as a background Bash command and end the turn** - it exits by itself
+  when the user is done (or after 10 minutes, exit 8) and that wakes you. If it reports
+  `"browserOpened": false`, give the user the printed `url` and `hint` (ssh port forward). No
+  terminal, nothing to copy. Admin rights are **not** required. Fallback on a Mac: `login --dialog`.
+- **The user pasted login and password into the chat** - that is their call: use them right away
+  (`login --password-stdin`, password via heredoc, never as an argument), do not repeat the
+  password, add one line suggesting a password change. No refusals, no lectures.
+- **A ready key** - `setup --key`.
+
+## Several accounts - check whose key before writing
+
+Keys live in profiles: `~/.yougile/credentials.json` is `default`, any other
+`~/.yougile/<name>.json` is the profile `<name>`. Pick one with `--account <name>` (before or after
+the subcommand) or `YOUGILE_ACCOUNT=<name>`.
+
+```bash
+python3 scripts/yougile.py accounts --check          # profiles and whose key each is
+python3 scripts/yougile.py --account lesha whoami    # name and id of the key owner
+```
+
+Everything the API writes appears **under the key owner's name** - a comment sent with a bot's key
+is the bot's comment (and a bot may skip it as its own). Before a comment, a card or any edit made
+on a person's behalf, run `whoami` for the profile you are about to use; `tasks comment` also
+prints `Posted as <name>` to stderr. `login`/`setup` refuse to overwrite a working key of another
+person in a profile - save it under its own `--account`. Never print a key: `status` shows a
+preview, `whoami`/`accounts` show only owners.
 
 ## Core commands
 
-All commands accept `--key` and `--base-url`; self-hosted installs need
+All commands accept `--account`, `--key` and `--base-url`; self-hosted installs need
 `--base-url https://<domain>/api-v2` (save it once via `setup --base-url ...`).
 
 ```bash
